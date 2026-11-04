@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090b12">
+<title>Teater Mini Sibi</title>
+<style>
+:root{--bg:#090b12;--panel:#121725;--muted:#a7adbd;--accent:#f2b84b;--white:#f7f8fb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{height:70px;padding:0 clamp(18px,5vw,64px);display:flex;align-items:center;justify-content:space-between;background:#0c101a;border-bottom:1px solid #252b39;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.2px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#f7cb70,#b66a24);display:grid;place-items:center;color:#17110a;font-weight:900}
+nav{display:flex;gap:22px;color:#d9dce5;font-size:14px}
+nav a{color:inherit;text-decoration:none}
+nav a:hover{color:var(--accent)}
+.header-btn{border:1px solid #3a4050;color:white;background:#171d2a;border-radius:22px;padding:9px 16px}
+main{max-width:1280px;margin:auto;padding:28px clamp(18px,5vw,64px) 60px}
+.hero{min-height:340px;border-radius:24px;overflow:hidden;position:relative;display:flex;align-items:end;padding:clamp(24px,5vw,52px);background:radial-gradient(circle at 78% 25%,#a55d43 0,transparent 23%),radial-gradient(circle at 70% 70%,#344a6d 0,transparent 35%),linear-gradient(115deg,#202b42,#111827 58%,#3b2630)}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,10,17,.94),rgba(7,10,17,.52) 55%,rgba(7,10,17,.12))}
+.hero-content{position:relative;z-index:1;max-width:560px}
+.eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+h1{font-size:clamp(32px,5vw,56px);line-height:1.04;margin:12px 0}
+.hero p{color:#d2d6e0;line-height:1.6;max-width:490px}
+.primary{display:inline-flex;align-items:center;gap:9px;margin-top:12px;background:var(--accent);color:#17120a;border:0;border-radius:24px;padding:12px 20px;font-weight:800;cursor:pointer}
+.section-head{display:flex;align-items:end;justify-content:space-between;margin:36px 0 16px}
+h2{font-size:21px;margin:0}
+.section-head span{font-size:12px;color:var(--muted)}
+.filters{display:flex;gap:9px;overflow:auto;padding-bottom:8px}
+.filter{white-space:nowrap;border:1px solid #303849;background:#141a27;color:#d8dce6;border-radius:20px;padding:8px 15px;cursor:pointer}
+.filter.active{background:var(--accent);color:#17120a;border-color:var(--accent);font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:17px}
+.movie{min-width:0}
+.poster{height:230px;border-radius:15px;position:relative;overflow:hidden;display:flex;align-items:end;padding:15px;background:linear-gradient(145deg,var(--c1),var(--c2))}
+.poster:before{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff40;border-radius:50%;top:-55px;right:-45px;box-shadow:0 0 0 18px #ffffff0c,0 0 0 38px #ffffff08}
+.poster:after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.poster strong{position:relative;z-index:1;font-size:18px;line-height:1.05;text-shadow:0 2px 8px #000}
+.tag{position:absolute;z-index:2;top:12px;left:12px;background:#090b12bb;border:1px solid #ffffff35;border-radius:20px;padding:5px 8px;font-size:10px}
+.movie h3{font-size:14px;margin:10px 0 4px}
+.movie small{color:var(--muted)}
+.empty{display:none;color:var(--muted);padding:25px 0}
+footer{border-top:1px solid #252b39;color:#858da0;text-align:center;padding:25px;font-size:12px}
+.modal{display:none;position:fixed;inset:0;background:#000c;z-index:10;place-items:center;padding:20px}
+.modal.open{display:grid}
+.dialog{max-width:440px;width:100%;background:#151b29;border:1px solid #394154;border-radius:18px;padding:25px}
+.dialog h2{margin-bottom:10px}
+.dialog p{color:#c0c6d3;line-height:1.55}
+.close{float:right;background:transparent;color:white;border:0;font-size:24px;cursor:pointer}
+@media(max-width:850px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.poster{height:210px}nav{gap:12px}}
+@media(max-width:560px){header{height:62px}nav a:not(:first-child){display:none}.hero{min-height:300px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.poster{height:205px}.section-head{margin-top:28px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">TS</div><span>TEATER MINI SIBI</span></div>
+  <nav><a href="#beranda">Beranda</a><a href="#film">Film</a><a href="#kategori">Kategori</a></nav>
+  <button class="header-btn" onclick="showInfo()">Masuk</button>
+</header>
+<main id="beranda">
+  <section class="hero">
+    <div class="hero-content">
+      <div class="eyebrow">Hiburan pilihan keluarga</div>
+      <h1>Temukan cerita favoritmu.</h1>
+      <p>Selamat datang di Teater Mini Sibi. Jelajahi koleksi film dan tontonan pilihan dalam satu tempat.</p>
+      <button class="primary" onclick="showInfo()">▶&nbsp; Jelajahi tontonan</button>
+    </div>
+  </section>
+
+  <div class="section-head" id="kategori"><h2>Kategori pilihan</h2><span>Pilih genre favorit</span></div>
+  <div class="filters">
+    <button class="filter active" data-filter="Semua">Semua</button>
+    <button class="filter" data-filter="Keluarga">Keluarga</button>
+    <button class="filter" data-filter="Animasi">Animasi</button>
+    <button class="filter" data-filter="Drama">Drama</button>
+    <button class="filter" data-filter="Petualangan">Petualangan</button>
+  </div>
+
+  <div class="section-head" id="film"><h2>Tontonan pilihan</h2><span>Konten contoh / belum berisi video</span></div>
+  <section class="grid" id="movieGrid">
+    <article class="movie" data-category="Keluarga"><div class="poster" style="--c1:#7e5b42;--c2:#182f42"><span class="tag">Keluarga</span><strong>Petualangan<br>Senja</strong></div><h3>Petualangan Senja</h3><small>Film pilihan · Contoh</small></article>
+    <article class="movie" data-category="Animasi"><div class="poster" style="--c1:#a75b83;--c2:#342b66"><span class="tag">Animasi</span><strong>Dunia<br>Impianku</strong></div><h3>Dunia Impianku</h3><small>Animasi · Contoh</small></article>
+    <article class="movie" data-category="Drama"><div class="poster" style="--c1:#a65c43;--c2:#252c48"><span class="tag">Drama</span><strong>Kisah<br>Hujan</strong></div><h3>Kisah Hujan</h3><small>Drama · Contoh</small></article>
+    <article class="movie" data-category="Petualangan"><div class="poster" style="--c1:#397d77;--c2:#18334b"><span class="tag">Petualangan</span><strong>Jejak<br>Rimba</strong></div><h3>Jejak Rimba</h3><small>Petualangan · Contoh</small></article>
+    <article class="movie" data-category="Keluarga"><div class="poster" style="--c1:#b38a46;--c2:#573a4e"><span class="tag">Keluarga</span><strong>Rumah<br>Bahagia</strong></div><h3>Rumah Bahagia</h3><small>Film keluarga · Contoh</small></article>
+  </section>
+  <p class="empty" id="empty">Belum ada tontonan dalam kategori ini.</p>
+</main>
+<footer>© 2026 Teater Mini Sibi · Halaman awal versi pengembangan</footer>
+<div class="modal" id="infoModal" role="dialog" aria-modal="true">
+  <div class="dialog"><button class="close" onclick="closeInfo()" aria-label="Tutup">×</button><div class="eyebrow">Teater Mini Sibi</div><h2>Website sedang disiapkan</h2><p>Ini adalah rancangan tampilan awal. Video, akun pengguna, upload TUS, dan iklan akan diaktifkan setelah layanan backend dan hosting disiapkan.</p><button class="primary" onclick="closeInfo()">Mengerti</button></div>
+</div>
+<script>
+const filters=document.querySelectorAll('.filter');
+filters.forEach(button=>button.addEventListener('click',()=>{
+  filters.forEach(b=>b.classList.remove('active'));button.classList.add('active');
+  let visible=0;
+  document.querySelectorAll('.movie').forEach(card=>{
+    const show=button.dataset.filter==='Semua'||card.dataset.category===button.dataset.filter;
+    card.style.display=show?'':'none';if(show)visible++;
+  });
+  document.getElementById('empty').style.display=visible?'none':'block';
+}));
+function showInfo(){document.getElementById('infoModal').classList.add('open')}
+function closeInfo(){document.getElementById('infoModal').classList.remove('open')}
+document.getElementById('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')closeInfo()});
+</script>
+</body>
+</html>
