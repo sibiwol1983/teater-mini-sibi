@@ -49,6 +49,38 @@ footer{border-top:1px solid #252b39;color:#858da0;text-align:center;padding:25px
 .close{float:right;background:transparent;color:white;border:0;font-size:24px;cursor:pointer}
 @media(max-width:850px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.poster{height:210px}nav{gap:12px}}
 @media(max-width:560px){header{height:62px}nav a:not(:first-child){display:none}.hero{min-height:300px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.poster{height:205px}.section-head{margin-top:28px}}
+.poster{
+  height:250px;
+  padding:0;
+  background:#151b29;
+  border-radius:15px;
+  overflow:hidden;
+}
+.poster img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.movie h3{margin:10px 0 5px}
+.movie p{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.5;
+  margin:6px 0;
+}
+.watch{
+  display:inline-block;
+  margin-top:9px;
+  padding:9px 12px;
+  border-radius:20px;
+  background:var(--accent);
+  color:#17120a;
+  text-decoration:none;
+  font-size:11px;
+  font-weight:800;
+}
+.movie{min-width:0}
 </style>
 </head>
 <body>
@@ -68,16 +100,11 @@ footer{border-top:1px solid #252b39;color:#858da0;text-align:center;padding:25px
   </section>
 
   <div class="section-head" id="kategori"><h2>Kategori pilihan</h2><span>Pilih genre favorit</span></div>
-  <div class="filters">
-    <button class="filter active" data-filter="Semua">Semua</button>
-    <button class="filter" data-filter="Keluarga">Keluarga</button>
-    <button class="filter" data-filter="Animasi">Animasi</button>
-    <button class="filter" data-filter="Drama">Drama</button>
-    <button class="filter" data-filter="Petualangan">Petualangan</button>
-  </div>
-
+  <div class="filters" id="categoryFilters">
+  <button class="filter active" data-filter="Semua">Semua</button>
+</div>
   <div class="section-head" id="film"><h2>Tontonan pilihan</h2><span>Konten contoh / belum berisi video</span></div>
-  <section class="grid" id="movieGrid">
+  <section class="grid" id="movieGrid"></section>
     <article class="movie" data-category="Keluarga"><div class="poster" style="--c1:#7e5b42;--c2:#182f42"><span class="tag">Keluarga</span><strong>Petualangan<br>Senja</strong></div><h3>Petualangan Senja</h3><small>Film pilihan · Contoh</small></article>
     <article class="movie" data-category="Animasi"><div class="poster" style="--c1:#a75b83;--c2:#342b66"><span class="tag">Animasi</span><strong>Dunia<br>Impianku</strong></div><h3>Dunia Impianku</h3><small>Animasi · Contoh</small></article>
     <article class="movie" data-category="Drama"><div class="poster" style="--c1:#a65c43;--c2:#252c48"><span class="tag">Drama</span><strong>Kisah<br>Hujan</strong></div><h3>Kisah Hujan</h3><small>Drama · Contoh</small></article>
@@ -91,19 +118,118 @@ footer{border-top:1px solid #252b39;color:#858da0;text-align:center;padding:25px
   <div class="dialog"><button class="close" onclick="closeInfo()" aria-label="Tutup">×</button><div class="eyebrow">Teater Mini Sibi</div><h2>Website sedang disiapkan</h2><p>Ini adalah rancangan tampilan awal. Video, akun pengguna, upload TUS, dan iklan akan diaktifkan setelah layanan backend dan hosting disiapkan.</p><button class="primary" onclick="closeInfo()">Mengerti</button></div>
 </div>
 <script>
-const filters=document.querySelectorAll('.filter');
-filters.forEach(button=>button.addEventListener('click',()=>{
-  filters.forEach(b=>b.classList.remove('active'));button.classList.add('active');
-  let visible=0;
-  document.querySelectorAll('.movie').forEach(card=>{
-    const show=button.dataset.filter==='Semua'||card.dataset.category===button.dataset.filter;
-    card.style.display=show?'':'none';if(show)visible++;
+
+const grid = document.getElementById("movieGrid");
+const filters = document.getElementById("categoryFilters");
+const empty = document.getElementById("empty");
+
+let allPosters = [];
+let activeCategory = "Semua";
+
+function makeElement(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+
+function renderFilters() {
+  filters.replaceChildren();
+
+  const categories = [
+    "Semua",
+    ...new Set(allPosters.map(p => p.category).filter(Boolean))
+  ];
+
+  categories.forEach(category => {
+    const button = makeElement("button", "filter", category);
+    if (category === activeCategory) {
+      button.classList.add("active");
+    }
+
+    button.addEventListener("click", () => {
+      activeCategory = category;
+      renderFilters();
+      renderPosters();
+    });
+
+    filters.appendChild(button);
   });
-  document.getElementById('empty').style.display=visible?'none':'block';
-}));
-function showInfo(){document.getElementById('infoModal').classList.add('open')}
-function closeInfo(){document.getElementById('infoModal').classList.remove('open')}
-document.getElementById('infoModal').addEventListener('click',e=>{if(e.target.id==='infoModal')closeInfo()});
+}
+
+function renderPosters() {
+  grid.replaceChildren();
+
+  const posters = allPosters.filter(p =>
+    activeCategory === "Semua" || p.category === activeCategory
+  );
+
+  empty.style.display = posters.length ? "none" : "block";
+  empty.textContent = "Belum ada poster dalam kategori ini.";
+
+  posters.forEach(poster => {
+    const card = makeElement("article", "movie");
+
+    const posterBox = makeElement("div", "poster");
+    const image = document.createElement("img");
+
+    image.src = "/api/posters/image?key=" +
+      encodeURIComponent(poster.image_key);
+    image.alt = poster.title || "Poster film";
+    image.loading = "lazy";
+
+    image.onerror = () => {
+      image.alt = "Poster tidak dapat dimuat";
+    };
+
+    const tag = makeElement("span", "tag", poster.category);
+    posterBox.append(image, tag);
+
+    const title = makeElement("h3", "", poster.title);
+    const description = makeElement(
+      "p", "", poster.description || ""
+    );
+
+    const watch = makeElement(
+      "a", "watch", "▶ TONTON DI TELEGRAM"
+    );
+    watch.href = poster.telegram_url;
+    watch.target = "_blank";
+    watch.rel = "noopener noreferrer";
+
+    card.append(posterBox, title, description, watch);
+    grid.appendChild(card);
+  });
+}
+
+async function loadPosters() {
+  empty.style.display = "block";
+  empty.textContent = "Memuat katalog film...";
+
+  try {
+    const response = await fetch("/api/posters/list", {
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || "Gagal mengambil katalog.");
+    }
+
+    allPosters = data.posters || [];
+    renderFilters();
+    renderPosters();
+
+  } catch (error) {
+    grid.replaceChildren();
+    empty.style.display = "block";
+    empty.textContent = error.message ||
+      "Katalog belum dapat dimuat. Silakan coba lagi.";
+  }
+}
+
+loadPosters();
 </script>
 </body>
 </html>
