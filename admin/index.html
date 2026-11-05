@@ -1,22 +1,204 @@
+
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090b12"><title>Admin Upload · Teater Mini Sibi</title>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090b12">
+<title>Admin Poster - Teater Mini Sibi</title>
 <style>
-:root{color-scheme:dark;--bg:#090b12;--panel:#151b29;--line:#30394b;--gold:#f2b84b;--muted:#a7adbd}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f7f8fb;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}main{width:min(760px,calc(100% - 32px));margin:48px auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}.brand{font-weight:800;letter-spacing:.4px}.brand span{color:var(--gold)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px}h1{font-size:26px;margin:0 0 8px}p{color:var(--muted);line-height:1.55}label{display:block;font-size:14px;font-weight:700;margin:18px 0 8px}input{width:100%;padding:13px 14px;border:1px solid #3b4559;border-radius:10px;background:#0e1420;color:white;font:inherit}input[type=file]{padding:12px}button{border:0;border-radius:10px;padding:12px 18px;background:var(--gold);color:#1a1408;font-weight:800;cursor:pointer}button.secondary{background:#283246;color:white;border:1px solid #46516a}button:disabled{opacity:.5;cursor:not-allowed}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:22px}.hint{font-size:12px;color:var(--muted)}.status{margin-top:20px;padding:14px;border:1px solid var(--line);border-radius:10px;display:none;white-space:pre-wrap}.status.show{display:block}progress{width:100%;height:14px;margin-top:14px;accent-color:var(--gold)}.hidden{display:none!important}.error{color:#ffaaa3}.success{color:#a8e6bd}a{color:var(--gold)}@media(max-width:520px){main{margin:22px auto}.panel{padding:19px}.top{align-items:flex-start}}
-</style></head><body><main>
-<div class="top"><div class="brand">TEATER MINI <span>SIBI</span> · ADMIN</div><a href="/">Kembali ke situs</a></div>
-<section id="loginPanel" class="panel"><h1>Login administrator</h1><p>Halaman khusus pengelola untuk mengunggah video ke Cloudflare Stream.</p><form id="loginForm"><label for="password">Password administrator</label><input id="password" type="password" autocomplete="current-password" required><div class="row"><button type="submit">Masuk</button></div></form><div id="loginStatus" class="status" role="status"></div></section>
-<section id="uploadPanel" class="panel hidden"><h1>Upload video TUS</h1><p>Upload dapat dilanjutkan jika koneksi terputus selama alamat upload masih berlaku. Video dikirim langsung ke Cloudflare Stream, bukan disimpan di server website.</p><form id="uploadForm"><label for="video">Pilih file video</label><input id="video" type="file" accept="video/*" required><div class="hint">Maksimum ukuran file: 30 GB. Kapasitas penyimpanan tetap mengikuti kuota Cloudflare Stream Anda.</div><label for="title">Nama video</label><input id="title" type="text" maxlength="200" placeholder="Contoh: Film keluarga episode 1" required><label for="duration">Durasi maksimum video (menit)</label><input id="duration" type="number" min="1" max="600" value="60" required><div class="hint">Masukkan perkiraan durasi maksimum video. Maksimum 600 menit (10 jam). Cloudflare memakai nilai ini untuk reservasi kapasitas sebelum upload.</div><div class="row"><button id="uploadButton" type="submit">Mulai upload</button><button id="logoutButton" class="secondary" type="button">Keluar</button></div></form><div id="uploadStatus" class="status" role="status"></div><progress id="progress" class="hidden" max="100" value="0"></progress><div id="progressText" class="hint"></div></section>
+:root{color-scheme:dark;--bg:#090b12;--panel:#151b29;--line:#30394b;--gold:#f2b84b;--muted:#a7adbd}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f7f8fb;font-family:Arial,sans-serif}
+main{width:min(760px,calc(100% - 32px));margin:35px auto}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.brand{font-weight:800}.brand span{color:var(--gold)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:25px}
+h1{font-size:25px;margin:0 0 8px}
+p,.hint{color:var(--muted);line-height:1.5}
+label{display:block;font-size:14px;font-weight:bold;margin:17px 0 8px}
+input,textarea{width:100%;padding:13px;border:1px solid #3b4559;border-radius:10px;background:#0e1420;color:white;font:inherit}
+input[type=file]{padding:12px}
+textarea{min-height:90px;resize:vertical}
+button{border:0;border-radius:10px;padding:13px 18px;background:var(--gold);color:#1a1408;font-weight:bold;cursor:pointer}
+button.secondary{background:#283246;color:white;border:1px solid #46516a}
+button:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px}
+.hint{font-size:12px}
+.status{display:none;margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:10px;white-space:pre-wrap}
+.status.show{display:block}
+.hidden{display:none!important}
+.error{color:#ffaaa3}.success{color:#a8e6bd}
+a{color:var(--gold)}
+#preview{display:none;margin-top:14px;max-width:220px;max-height:280px;object-fit:contain;border-radius:10px}
+@media(max-width:520px){main{margin:20px auto}.panel{padding:18px}}
+</style>
+</head>
+<body>
+<main>
+<div class="top">
+<div class="brand">TEATER MINI <span>SIBI</span> · ADMIN</div>
+<a href="/">Kembali ke situs</a>
+</div>
+
+<section id="loginPanel" class="panel">
+<h1>Login Administrator</h1>
+<p>Masuk untuk mengelola poster katalog film.</p>
+<form id="loginForm">
+<label for="password">Password administrator</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<div class="row"><button type="submit">Masuk</button></div>
+</form>
+<div id="loginStatus" class="status"></div>
+</section>
+
+<section id="uploadPanel" class="panel hidden">
+<h1>Upload Poster Film</h1>
+<p>Tambahkan poster dan tautan Telegram untuk katalog Teater Mini Sibi.</p>
+
+<form id="posterForm">
+<label for="image">Pilih gambar poster</label>
+<input id="image" type="file" accept="image/jpeg,image/png,image/webp" required>
+<div class="hint">Format JPG, PNG, WebP. Maksimum 10 MB.</div>
+<img id="preview" alt="Pratinjau poster">
+
+<label for="title">Judul film</label>
+<input id="title" type="text" maxlength="200" placeholder="Masukkan judul film" required>
+
+<label for="category">Kategori film</label>
+<input id="category" type="text" placeholder="Contoh: Drama, Komedi, Animasi" required>
+
+<label for="description">Deskripsi film</label>
+<textarea id="description" placeholder="Tuliskan deskripsi singkat film"></textarea>
+
+<label for="telegramUrl">Tautan film Telegram</label>
+<input id="telegramUrl" type="url" placeholder="https://t.me/..." required>
+
+<div class="row">
+<button id="uploadButton" type="submit">Simpan Poster</button>
+<button id="logoutButton" class="secondary" type="button">Keluar</button>
+</div>
+</form>
+<div id="uploadStatus" class="status" role="status"></div>
+</section>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.3.1/dist/tus.min.js"></script>
-<script type="module">
-const Upload = window.tus.Upload;
-const loginPanel=document.getElementById("loginPanel"), uploadPanel=document.getElementById("uploadPanel"), loginStatus=document.getElementById("loginStatus"), uploadStatus=document.getElementById("uploadStatus"), progress=document.getElementById("progress"), progressText=document.getElementById("progressText"), uploadButton=document.getElementById("uploadButton");
-function status(el,msg,kind=""){el.textContent=msg;el.className=`status show ${kind}`}
-function showLogin(ok){loginPanel.classList.toggle("hidden",ok);uploadPanel.classList.toggle("hidden",!ok)}
-async function checkSession(){try{const r=await fetch("/api/admin/session",{credentials:"same-origin"});showLogin(r.ok)}catch{showLogin(false)}}
-document.getElementById("loginForm").addEventListener("submit",async e=>{e.preventDefault();status(loginStatus,"Memeriksa password...");try{const r=await fetch("/api/admin/login",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:document.getElementById("password").value})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Login gagal.");document.getElementById("password").value="";showLogin(true)}catch(err){status(loginStatus,err.message||"Login gagal.","error")}});
-document.getElementById("logoutButton").addEventListener("click",async()=>{await fetch("/api/admin/logout",{method:"POST",credentials:"same-origin"});showLogin(false);status(loginStatus,"Anda sudah keluar.")});
-document.getElementById("uploadForm").addEventListener("submit",async e=>{e.preventDefault();const file=document.getElementById("video").files[0], title=document.getElementById("title").value.trim(), minutes=Number(document.getElementById("duration").value);if(!file||!file.type.startsWith("video/")){status(uploadStatus,"Pilih file video yang valid.","error");return}if(file.size>30*1024*1024*1024){status(uploadStatus,"Ukuran file melebihi batas 30 GB.","error");return}if(!title||!Number.isInteger(minutes)||minutes<1||minutes>600){status(uploadStatus,"Isi nama video dan durasi maksimum 1–600 menit.","error");return}
-uploadButton.disabled=true;progress.classList.remove("hidden");progress.value=0;progressText.textContent="Menyiapkan upload...";status(uploadStatus,"Menghubungi Cloudflare untuk membuat alamat upload satu kali.");const expiry=new Date(Date.now()+7*24*60*60*1000).toISOString();const upload=new Upload(file,{endpoint:"/api/stream/create-upload",chunkSize:50*1024*1024,retryDelays:[0,1000,3000,5000,10000,20000],metadata:{name:encodeURIComponent(title),maxDurationSeconds:String(minutes*60),expiry,allowedOrigins:"teater-mini-sibi.win,teater-mini-sibi.pages.dev"},onError(err){status(uploadStatus,`Upload belum selesai: ${err.message}\nAnda dapat mencoba lagi dan melanjutkan upload sebelumnya jika tersedia.`,"error");uploadButton.disabled=false;progressText.textContent="Upload terhenti."},onProgress(sent,total){const pct=total?Math.floor(sent/total*100):0;progress.value=pct;progressText.textContent=`${pct}% · ${(sent/1048576).toFixed(1)} MB dari ${(total/1048576).toFixed(1)} MB`},onSuccess(){status(uploadStatus,"Upload selesai dikirim ke Cloudflare Stream. Video mungkin masih memerlukan waktu untuk diproses sebelum dapat diputar.","success");progress.value=100;progressText.textContent="100% · Selesai";uploadButton.disabled=false}});try{const previous=await upload.findPreviousUploads();if(previous.length){upload.resumeFromPreviousUpload(previous[0]);status(uploadStatus,"Melanjutkan upload sebelumnya...")}upload.start()}catch(err){status(uploadStatus,err.message||"Tidak dapat memulai upload.","error");uploadButton.disabled=false}});
+
+<script>
+const loginPanel=document.getElementById("loginPanel");
+const uploadPanel=document.getElementById("uploadPanel");
+const loginStatus=document.getElementById("loginStatus");
+const uploadStatus=document.getElementById("uploadStatus");
+const uploadButton=document.getElementById("uploadButton");
+const imageInput=document.getElementById("image");
+const preview=document.getElementById("preview");
+
+function showStatus(el,message,type=""){
+  el.textContent=message;
+  el.className="status show "+type;
+}
+
+function showLogin(loggedIn){
+  loginPanel.classList.toggle("hidden",loggedIn);
+  uploadPanel.classList.toggle("hidden",!loggedIn);
+}
+
+async function checkSession(){
+  try{
+    const r=await fetch("/api/admin/session",{credentials:"same-origin"});
+    showLogin(r.ok);
+  }catch{
+    showLogin(false);
+  }
+}
+
+document.getElementById("loginForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  showStatus(loginStatus,"Memeriksa password...");
+  try{
+    const r=await fetch("/api/admin/login",{
+      method:"POST",
+      credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        password:document.getElementById("password").value
+      })
+    });
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||"Login gagal.");
+    document.getElementById("password").value="";
+    showLogin(true);
+  }catch(err){
+    showStatus(loginStatus,err.message,"error");
+  }
+});
+
+document.getElementById("logoutButton").addEventListener("click",async()=>{
+  await fetch("/api/admin/logout",{
+    method:"POST",
+    credentials:"same-origin"
+  });
+  showLogin(false);
+  showStatus(loginStatus,"Anda sudah keluar.");
+});
+
+imageInput.addEventListener("change",()=>{
+  const file=imageInput.files[0];
+  preview.style.display="none";
+  if(!file)return;
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+    showStatus(uploadStatus,"Format gambar harus JPG, PNG, atau WebP.","error");
+    imageInput.value="";
+    return;
+  }
+  if(file.size>10*1024*1024){
+    showStatus(uploadStatus,"Ukuran gambar maksimal 10 MB.","error");
+    imageInput.value="";
+    return;
+  }
+  preview.src=URL.createObjectURL(file);
+  preview.style.display="block";
+});
+
+document.getElementById("posterForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+
+  const file=imageInput.files[0];
+  if(!file){
+    showStatus(uploadStatus,"Pilih gambar poster terlebih dahulu.","error");
+    return;
+  }
+
+  const formData=new FormData();
+  formData.append("image",file);
+  formData.append("title",document.getElementById("title").value.trim());
+  formData.append("category",document.getElementById("category").value.trim());
+  formData.append("description",document.getElementById("description").value.trim());
+  formData.append("telegram_url",document.getElementById("telegramUrl").value.trim());
+
+  uploadButton.disabled=true;
+  showStatus(uploadStatus,"Sedang mengunggah poster...");
+
+  try{
+    const r=await fetch("/api/posters/upload",{
+      method:"POST",
+      credentials:"same-origin",
+      body:formData
+    });
+
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"Upload poster gagal.");
+
+    showStatus(uploadStatus,"Poster berhasil disimpan!","success");
+    document.getElementById("posterForm").reset();
+    preview.style.display="none";
+  }catch(err){
+    showStatus(uploadStatus,err.message||"Terjadi kesalahan saat upload.","error");
+  }finally{
+    uploadButton.disabled=false;
+  }
+});
+
 checkSession();
-</script></body></html>
+</script>
+</body>
+</html>
