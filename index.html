@@ -506,6 +506,7 @@ footer {
   data-zone="12181342"
   data-sdk="show_12181342">
 </script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 <header>
@@ -682,6 +683,31 @@ searchInput.addEventListener("input", () => {
   renderPosters();
 });
 loadPosters();
+loadPosters();
+
+// Inisialisasi Telegram Mini App
+if (window.Telegram?.WebApp) {
+  window.Telegram.WebApp.ready();
+  window.Telegram.WebApp.expand();
+}
+
+// Aktifkan Monetag In-App Interstitial
+if (typeof window.show_12181342 === "function") {
+  window.show_12181342({
+    type: "inApp",
+    inAppSettings: {
+      frequency: 2,
+      capping: 2,
+      interval: 120,
+      timeout: 15,
+      everyPage: false
+    }
+  }).catch((error) => {
+    console.warn("Monetag ad error:", error);
+  });
+} else {
+  console.warn("Monetag SDK belum tersedia.");
+}
 </script>
 </body>
 </html>
