@@ -9,6 +9,61 @@ const ALLOWED_TYPES = [
   "image/webp"
 ];
 
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+
+async function sendTelegramAnnouncement(env, data) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHANNEL_ID) {
+    return false;
+  }
+
+  const message = [
+    "🎬 <b>DRAMA BARU TELAH HADIR!</b>",
+    "",
+    `📺 <b>${escapeHtml(data.title)}</b>`,
+    `🏷️ Kategori: ${escapeHtml(data.category)}`,
+    data.description
+      ? `📝 ${escapeHtml(data.description)}`
+      : "",
+    "",
+    "🍿 Selamat menonton!",
+    "",
+    `▶️ <a href="${escapeHtml(data.telegramUrl)}">TONTON DRAMA DI TELEGRAM</a>`,
+    "",
+    "📌 <b>Teater Mini Sibi</b>"
+  ].filter(Boolean).join("\n");
+
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chat_id: env.TELEGRAM_CHANNEL_ID,
+          text: message,
+          parse_mode: "HTML",
+          disable_web_page_preview: false
+        })
+      }
+    );
+
+    const result = await response.json();
+    return response.ok && result.ok === true;
+  } catch {
+    return false;
+  }
+}
+
 export async function onRequestPost({ request, env }) {
   if (!isSameOrigin(request)) {
     return json({ error: "Permintaan tidak diizinkan." }, 403);
@@ -48,8 +103,10 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const url = new URL(telegramUrl);
-    if (url.protocol !== "https:" ||
-        !["t.me", "telegram.me"].includes(url.hostname)) {
+    if (
+      url.protocol !== "https:" ||
+      !["t.me", "telegram.me"].includes(url.hostname)
+    ) {
       return json({ error: "Tautan Telegram tidak valid." }, 400);
     }
   } catch {
@@ -85,9 +142,19 @@ export async function onRequestPost({ request, env }) {
       telegramUrl
     ).run();
 
+    const announcementSent = await sendTelegramAnnouncement(env, {
+      title,
+      description,
+      category,
+      telegramUrl
+    });
+
     return json({
       success: true,
-      message: "Poster berhasil disimpan.",
+      message: announcementSent
+        ? "Poster berhasil disimpan dan diumumkan ke Telegram."
+        : "Poster berhasil disimpan, tetapi pengumuman Telegram gagal dikirim.",
+      telegram_notified: announcementSent,
       image_key: imageKey
     }, 201);
 
