@@ -340,26 +340,23 @@ nav a:hover {
 
 .filters {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: 10px;
-  margin: 20px 6%;
+  margin: 20px 4%;
+  padding: 5px 0 12px;
+  scrollbar-width: none;
 }
 
-.filter {
-  padding: 9px 18px;
-  border: 1px solid #344158;
+.filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filters .filter {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 11px 17px;
   border-radius: 22px;
-  background: #151e2e;
-  color: #cbd2df;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.filter.active,
-.filter:hover {
-  background: #d6ad62;
-  border-color: #d6ad62;
-  color: #17120a;
 }
 
 .grid {
@@ -368,7 +365,13 @@ nav a:hover {
   gap: 24px;
   margin: 0 6% 50px;
 }
-
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 4% 35px;
+  }
+}
 .movie {
   min-width: 0;
   padding: 12px;
@@ -620,7 +623,7 @@ const filters = document.getElementById("categoryFilters");
 const empty = document.getElementById("empty");
 const searchInput = document.getElementById("searchInput");
 let allPosters = [];
-let activeCategory = "Semua";
+let activeCategory = "Menu";
 let searchText = "";
 function makeElement(tag, className, text) {
   const el = document.createElement(tag);
@@ -645,31 +648,61 @@ function showDetail(poster) {
 function closeDetail() {
   document.getElementById("detailModal").style.display = "none";
 }
+
+function normalizeCategory(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^drama\s+/, "");
+}
+
+function getCategoryGroup(value) {
+  const category = normalizeCategory(value);
+
+  if (category.includes("korea")) return "Drama Korea";
+  if (category.includes("china")) return "Drama China";
+  if (category.includes("jepang")) return "Drama Jepang";
+
+  return "Drama Lainnya";
+}
+
 function renderFilters() {
   filters.replaceChildren();
+
   const categories = [
-    "Semua",
-    ...new Set(allPosters.map(p => p.category).filter(Boolean))
+    "Menu",
+    "Drama Korea",
+    "Drama China",
+    "Drama Jepang",
+    "Drama Lainnya"
   ];
+
   categories.forEach(category => {
-    const button = makeElement("button", "filter", category);
+    const button = makeElement(
+      "button",
+      "filter",
+      category.toUpperCase()
+    );
+
     if (category === activeCategory) {
       button.classList.add("active");
     }
+
     button.addEventListener("click", () => {
       activeCategory = category;
       renderFilters();
       renderPosters();
     });
+
     filters.appendChild(button);
   });
 }
 function renderPosters() {
   grid.replaceChildren();
 const posters = allPosters.filter(p => {
-  const cocokKategori =
-    activeCategory === "Semua" ||
-    p.category === activeCategory;
+ const cocokKategori =
+  activeCategory === "Menu" ||
+  getCategoryGroup(p.category) === activeCategory;
   const cocokPencarian =
     (p.title || "").toLowerCase().includes(searchText) ||
     (p.description || "").toLowerCase().includes(searchText);
