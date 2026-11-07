@@ -46,10 +46,12 @@ async function sendTelegramAnnouncement(env, data) {
       return false;
     }
 
-    const form = new FormData();
+   const imageBlob = await imageObject.blob();
+
+const form = new FormData();
 
     form.append("chat_id", env.TELEGRAM_CHANNEL_ID);
-    form.append("photo", imageObject.body, "poster.jpg");
+    form.append("photo", imageBlob, "poster.jpg");
     form.append("caption", caption);
     form.append("parse_mode", "HTML");
 
@@ -75,11 +77,17 @@ async function sendTelegramAnnouncement(env, data) {
       }
     );
 
-    const result = await response.json();
+   const result = await response.json();
 
-    return response.ok && result.ok === true;
-  } catch {
-    return false;
+if (!response.ok || result.ok !== true) {
+  console.error("Telegram sendPhoto error:", result);
+  return false;
+}
+
+return true;
+} catch (error) {
+  console.error("Telegram announcement error:", error);
+  return false;
   }
 }
 
