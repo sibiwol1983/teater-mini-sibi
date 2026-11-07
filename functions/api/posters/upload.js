@@ -19,12 +19,13 @@ function escapeHtml(value) {
   })[char]);
 }
 
+
 async function sendTelegramAnnouncement(env, data) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHANNEL_ID) {
     return false;
   }
 
-  const message = [
+  const caption = [
     "🎬 <b>DRAMA BARU TELAH HADIR!</b>",
     "",
     `📺 <b>${escapeHtml(data.title)}</b>`,
@@ -35,29 +36,47 @@ async function sendTelegramAnnouncement(env, data) {
     "",
     "🍿 Selamat menonton!",
     "",
-    `▶️ <a href="${escapeHtml(data.telegramUrl)}">TONTON DRAMA DI TELEGRAM</a>`,
-    "",
     "📌 <b>Teater Mini Sibi</b>"
   ].filter(Boolean).join("\n");
 
   try {
+    const imageObject = await env.BUCKET.get(data.imageKey);
+
+    if (!imageObject) {
+      return false;
+    }
+
+    const form = new FormData();
+
+    form.append("chat_id", env.TELEGRAM_CHANNEL_ID);
+    form.append("photo", imageObject.body, "poster.jpg");
+    form.append("caption", caption);
+    form.append("parse_mode", "HTML");
+
+    form.append(
+      "reply_markup",
+      JSON.stringify({
+        inline_keyboard: [
+          [
+            {
+              text: "▶ TONTON SEKARANG",
+              url: data.telegramUrl
+            }
+          ]
+        ]
+      })
+    );
+
     const response = await fetch(
-      `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendPhoto`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          chat_id: env.TELEGRAM_CHANNEL_ID,
-          text: message,
-          parse_mode: "HTML",
-          disable_web_page_preview: false
-        })
+        body: form
       }
     );
 
     const result = await response.json();
+
     return response.ok && result.ok === true;
   } catch {
     return false;
@@ -141,13 +160,14 @@ export async function onRequestPost({ request, env }) {
       imageKey,
       telegramUrl
     ).run();
-
-    const announcementSent = await sendTelegramAnnouncement(env, {
-      title,
-      description,
-      category,
-      telegramUrl
-    });
+    
+const announcementSent = await sendTelegramAnnouncement(env, {
+  title,
+  description,
+  category,
+  telegramUrl,
+  imageKey
+});
 
     return json({
       success: true,
