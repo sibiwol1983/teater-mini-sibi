@@ -43,7 +43,6 @@
   margin: 20px auto;
   padding: 0 16px;
 }
-
 .search-box input {
   width: 100%;
   padding: 14px 18px;
@@ -55,13 +54,44 @@
   outline: none;
   box-sizing: border-box;
 }
-
 .search-box input:focus {
   border-color: #d6ad62;
 }
-
 .search-box input::placeholder {
   color: #9ca3af;
+}
+#detailModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+#detailModal .dialog {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #151b29;
+  color: #ffffff;
+  padding: 22px;
+  border-radius: 18px;
+  box-sizing: border-box;
+}
+#detailModal h2 {
+  margin: 16px 0 8px;
+}
+#detailCategory {
+  color: #d6ad62;
+  font-size: 13px;
+}
+#detailDescription {
+  color: #c4c9d4;
+  line-height: 1.6;
 }
 </style>
 </head>
@@ -69,7 +99,9 @@
 <header>
   <div class="brand"><div class="logo">TS</div><span>TEATER MINI SIBI</span></div>
   <nav><a href="#beranda">Beranda</a><a href="#film">Film</a><a href="#kategori">Kategori</a></nav>
-  <button class="header-btn" onclick="showInfo()">Masuk</button>
+ <a class="header-btn" href="/admin/" style="text-decoration:none;">
+  Masuk Admin
+</a>
 </header>
 <main id="beranda">
   <section class="hero">
@@ -77,7 +109,9 @@
       <div class="eyebrow">Hiburan pilihan keluarga</div>
       <h1>Temukan cerita favoritmu.</h1>
       <p>Selamat datang di Teater Mini Sibi. Jelajahi koleksi film dan tontonan pilihan dalam satu tempat.</p>
-      <button class="primary" onclick="showInfo()">▶&nbsp; Jelajahi tontonan</button>
+      <a class="primary" href="#film" style="display:inline-block;text-decoration:none;">
+  ▶ Jelajahi tontonan
+</a>
     </div>
   </section>
   <div class="section-head" id="kategori"><h2>Kategori pilihan</h2><span>Pilih genre favorit</span></div>
@@ -92,16 +126,29 @@
   <div class="filters" id="categoryFilters">
   <button class="filter active" data-filter="Semua">Semua</button>
 </div>
-  <div class="section-head" id="film"><h2>Tontonan pilihan</h2><span>Konten contoh / belum berisi video</span></div>
+  <div class="section-head" id="film">
+  <h2>Tontonan pilihan</h2>
+  <span>Koleksi film pilihan</span>
+</div>
   <section class="grid" id="movieGrid"></section>
   <p class="empty" id="empty">Belum ada tontonan dalam kategori ini.</p>
 </main>
-<footer>© 2026 Teater Mini Sibi · Halaman awal versi pengembangan</footer>
-<div class="modal" id="infoModal" role="dialog" aria-modal="true">
-  <div class="dialog"><button class="close" onclick="closeInfo()" aria-label="Tutup">×</button><div class="eyebrow">Teater Mini Sibi</div><h2>Website sedang disiapkan</h2><p>Ini adalah rancangan tampilan awal. Video, akun pengguna, upload TUS, dan iklan akan diaktifkan setelah layanan backend dan hosting disiapkan.</p><button class="primary" onclick="closeInfo()">Mengerti</button></div>
+<div class="modal" id="detailModal" role="dialog" aria-modal="true">
+  <div class="dialog">
+    <button class="close" onclick="closeDetail()" aria-label="Tutup">×</button>
+    <img id="detailImage" src="" alt="Poster film"
+         style="width:100%;max-height:350px;object-fit:contain;border-radius:12px;">
+    <h2 id="detailTitle"></h2>
+    <p id="detailCategory"></p>
+    <p id="detailDescription"></p>
+    <a id="detailTelegram" class="watch"
+       href="#" target="_blank" rel="noopener noreferrer">
+       ▶ TONTON DI TELEGRAM
+    </a>
+  </div>
 </div>
+<footer>© 2026 Teater Mini Sibi · Halaman awal versi pengembangan</footer>
 <script>
-
 const grid = document.getElementById("movieGrid");
 const filters = document.getElementById("categoryFilters");
 const empty = document.getElementById("empty");
@@ -115,104 +162,102 @@ function makeElement(tag, className, text) {
   if (text !== undefined) el.textContent = text;
   return el;
 }
-
+function showDetail(poster) {
+  document.getElementById("detailImage").src =
+    "/api/posters/image?key=" +
+    encodeURIComponent(poster.image_key);
+  document.getElementById("detailTitle").textContent =
+    poster.title || "";
+  document.getElementById("detailCategory").textContent =
+    poster.category || "";
+  document.getElementById("detailDescription").textContent =
+    poster.description || "Belum ada sinopsis.";
+  document.getElementById("detailTelegram").href =
+    poster.telegram_url || "#";
+  document.getElementById("detailModal").style.display = "flex";
+}
+function closeDetail() {
+  document.getElementById("detailModal").style.display = "none";
+}
 function renderFilters() {
   filters.replaceChildren();
-
   const categories = [
     "Semua",
     ...new Set(allPosters.map(p => p.category).filter(Boolean))
   ];
-
   categories.forEach(category => {
     const button = makeElement("button", "filter", category);
     if (category === activeCategory) {
       button.classList.add("active");
     }
-
     button.addEventListener("click", () => {
       activeCategory = category;
       renderFilters();
       renderPosters();
     });
-
     filters.appendChild(button);
   });
 }
-
 function renderPosters() {
   grid.replaceChildren();
 const posters = allPosters.filter(p => {
   const cocokKategori =
     activeCategory === "Semua" ||
     p.category === activeCategory;
-
   const cocokPencarian =
     (p.title || "").toLowerCase().includes(searchText) ||
     (p.description || "").toLowerCase().includes(searchText);
-
   return cocokKategori && cocokPencarian;
 });
-
 empty.style.display = posters.length ? "none" : "block";
 empty.textContent = posters.length
   ? ""
   : "Film tidak ditemukan.";
-
   posters.forEach(poster => {
     const card = makeElement("article", "movie");
-
     const posterBox = makeElement("div", "poster");
+    posterBox.style.cursor = "pointer";
+posterBox.addEventListener("click", () => {
+  showDetail(poster);
+});
     const image = document.createElement("img");
-
     image.src = "/api/posters/image?key=" +
       encodeURIComponent(poster.image_key);
     image.alt = poster.title || "Poster film";
     image.loading = "lazy";
-
     image.onerror = () => {
       image.alt = "Poster tidak dapat dimuat";
     };
-
     const tag = makeElement("span", "tag", poster.category);
     posterBox.append(image, tag);
-
     const title = makeElement("h3", "", poster.title);
     const description = makeElement(
       "p", "", poster.description || ""
     );
-
     const watch = makeElement(
       "a", "watch", "▶ TONTON DI TELEGRAM"
     );
     watch.href = poster.telegram_url;
     watch.target = "_blank";
     watch.rel = "noopener noreferrer";
-
     card.append(posterBox, title, description, watch);
     grid.appendChild(card);
   });
 }
-
 async function loadPosters() {
   empty.style.display = "block";
   empty.textContent = "Memuat katalog film...";
-
   try {
     const response = await fetch("/api/posters/list", {
       cache: "no-store"
     });
-
     const data = await response.json();
-
     if (!response.ok || !data.success) {
       throw new Error(data.error || "Gagal mengambil katalog.");
     }
-
     allPosters = data.posters || [];
     renderFilters();
     renderPosters();
-
   } catch (error) {
     grid.replaceChildren();
     empty.style.display = "block";
