@@ -38,6 +38,31 @@
   font-weight:800;
 }
 .movie{min-width:0}
+.search-box {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px solid #343b4c;
+  border-radius: 30px;
+  background: #151b29;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.search-box input:focus {
+  border-color: #d6ad62;
+}
+
+.search-box input::placeholder {
+  color: #9ca3af;
+}
 </style>
 </head>
 <body>
@@ -55,19 +80,20 @@
       <button class="primary" onclick="showInfo()">▶&nbsp; Jelajahi tontonan</button>
     </div>
   </section>
-
   <div class="section-head" id="kategori"><h2>Kategori pilihan</h2><span>Pilih genre favorit</span></div>
+  <div class="search-box">
+  <input
+    type="search"
+    id="searchInput"
+    placeholder="Cari judul film..."
+    autocomplete="off"
+  >
+</div>
   <div class="filters" id="categoryFilters">
   <button class="filter active" data-filter="Semua">Semua</button>
 </div>
   <div class="section-head" id="film"><h2>Tontonan pilihan</h2><span>Konten contoh / belum berisi video</span></div>
   <section class="grid" id="movieGrid"></section>
-    <article class="movie" data-category="Keluarga"><div class="poster" style="--c1:#7e5b42;--c2:#182f42"><span class="tag">Keluarga</span><strong>Petualangan<br>Senja</strong></div><h3>Petualangan Senja</h3><small>Film pilihan · Contoh</small></article>
-    <article class="movie" data-category="Animasi"><div class="poster" style="--c1:#a75b83;--c2:#342b66"><span class="tag">Animasi</span><strong>Dunia<br>Impianku</strong></div><h3>Dunia Impianku</h3><small>Animasi · Contoh</small></article>
-    <article class="movie" data-category="Drama"><div class="poster" style="--c1:#a65c43;--c2:#252c48"><span class="tag">Drama</span><strong>Kisah<br>Hujan</strong></div><h3>Kisah Hujan</h3><small>Drama · Contoh</small></article>
-    <article class="movie" data-category="Petualangan"><div class="poster" style="--c1:#397d77;--c2:#18334b"><span class="tag">Petualangan</span><strong>Jejak<br>Rimba</strong></div><h3>Jejak Rimba</h3><small>Petualangan · Contoh</small></article>
-    <article class="movie" data-category="Keluarga"><div class="poster" style="--c1:#b38a46;--c2:#573a4e"><span class="tag">Keluarga</span><strong>Rumah<br>Bahagia</strong></div><h3>Rumah Bahagia</h3><small>Film keluarga · Contoh</small></article>
-  </section>
   <p class="empty" id="empty">Belum ada tontonan dalam kategori ini.</p>
 </main>
 <footer>© 2026 Teater Mini Sibi · Halaman awal versi pengembangan</footer>
@@ -79,10 +105,10 @@
 const grid = document.getElementById("movieGrid");
 const filters = document.getElementById("categoryFilters");
 const empty = document.getElementById("empty");
-
+const searchInput = document.getElementById("searchInput");
 let allPosters = [];
 let activeCategory = "Semua";
-
+let searchText = "";
 function makeElement(tag, className, text) {
   const el = document.createElement(tag);
   if (className) el.className = className;
@@ -116,13 +142,22 @@ function renderFilters() {
 
 function renderPosters() {
   grid.replaceChildren();
+const posters = allPosters.filter(p => {
+  const cocokKategori =
+    activeCategory === "Semua" ||
+    p.category === activeCategory;
 
-  const posters = allPosters.filter(p =>
-    activeCategory === "Semua" || p.category === activeCategory
-  );
+  const cocokPencarian =
+    (p.title || "").toLowerCase().includes(searchText) ||
+    (p.description || "").toLowerCase().includes(searchText);
 
-  empty.style.display = posters.length ? "none" : "block";
-  empty.textContent = "Belum ada poster dalam kategori ini.";
+  return cocokKategori && cocokPencarian;
+});
+
+empty.style.display = posters.length ? "none" : "block";
+empty.textContent = posters.length
+  ? ""
+  : "Film tidak ditemukan.";
 
   posters.forEach(poster => {
     const card = makeElement("article", "movie");
@@ -185,7 +220,10 @@ async function loadPosters() {
       "Katalog belum dapat dimuat. Silakan coba lagi.";
   }
 }
-
+searchInput.addEventListener("input", () => {
+  searchText = searchInput.value.trim().toLowerCase();
+  renderPosters();
+});
 loadPosters();
 </script>
 </body>
